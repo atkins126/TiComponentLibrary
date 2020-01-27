@@ -43,6 +43,72 @@ type
 
   end;
 
+  { TiTreeViewItem }
+
+  generic TiTreeViewItem<TItemData> = class
+  public
+    type
+      PTreeViewItem = ^TTreeViewItem;
+      TTreeViewItem = specialize TiTreeViewItem<TItemData>;
+  protected
+    FItemData : TItemData;
+    FPrevElement : PTreeViewItem;
+    FNextElement : PTreeViewItem;
+    FChildrenElement : PTreeViewItem;
+    FLastChildrenElement : PTreeViewItem;
+
+    function GetValue : TItemData; {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure SetValue (AItemData : TItemData); {$IFNDEF DEBUG}inline;{$ENDIF}
+  public
+    constructor Create (AItemData : TItemData);
+    destructor Destroy; override;
+
+    function PrevElement : PTreeViewItem; {$IFNDEF DEBUG}inline;{$ENDIF}
+    function NextElement : PTreeViewItem; {$IFNDEF DEBUG}inline;{$ENDIF}
+    function HasChildrens : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
+    function ChildrenElement : PTreeViewItem; {$IFNDEF DEBUG}inline;{$ENDIF}
+
+    function AddChildren (AItemData : TItemData) : PTreeViewItem;
+
+    property Value : TItemData read GetValue write SetValue;
+  end;
+
+  { TiTreeViewModel }
+
+  generic TiTreeViewModel<TTreeItem> = class (TInterfacedObject,
+    specialize IListModel<TTreeItem>)
+  public
+    type
+      PTreeViewItem = ^TTreeViewItem;
+      TTreeViewItem = specialize TiTreeViewItem<TTreeItem>;
+
+      { TiTreeViewModelEnumerator }
+
+      TiTreeViewModelEnumerator = class
+      protected
+        FTreeViewItem : PTreeViewItem;
+        FCurrentItem : PTreeViewItem;
+
+        function GetCurrent : TTreeViewItem;
+      public
+        constructor Create (ATreeViewItem : TTreeViewItem);
+        function MoveNext : Boolean;
+        property Current : TTreeViewItem read GetCurrent;
+      end;
+  protected
+    FHeadElement : PTreeViewItem;
+    FLastElement : PTreeViewItem;
+
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    function GetEnumerator : TiTreeViewModelEnumerator;
+
+    function Empty : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
+    function AddElement (ATreeItem : TTreeItem) : PTreeViewItem;
+  end;
+
   { Custom tree view renderer }
   generic TiCustomTreeViewRenderer<Item> = class (TInterfacedObject,
     IScrollingListRenderer)
