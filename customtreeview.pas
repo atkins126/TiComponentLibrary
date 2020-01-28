@@ -117,5 +117,151 @@ type
 
 implementation
 
+{ TiTreeViewModel.TiTreeViewModelEnumerator }
+
+function TiTreeViewModel.TiTreeViewModelEnumerator.GetCurrent: TTreeViewItem;
+begin
+  Result := FCurrentItem^;
+  FCurrentItem := FCurrentItem^.NextElement;
+end;
+
+constructor TiTreeViewModel.TiTreeViewModelEnumerator.Create(
+  ATreeViewItem: TTreeViewItem);
+begin
+  FTreeViewItem := ATreeViewItem;
+  FCurrentItem := ATreeViewItem;
+end;
+
+function TiTreeViewModel.TiTreeViewModelEnumerator.MoveNext: Boolean;
+begin
+  Result := FCurrentItem <> nil;
+end;
+
+{ TiTreeViewModel }
+
+constructor TiTreeViewModel.Create;
+begin
+  FHeadElement := nil;
+  FLastElement := nil;
+end;
+
+destructor TiTreeViewModel.Destroy;
+var
+  Elem, Prev : PTreeViewItem;
+begin
+  Elem := FLastElement;
+  while (Elem <> nil) do
+  begin
+    Prev := Elem^.PrevElement;
+    FreeAndNil(Elem);
+    Elem := Prev;
+  end;
+
+  inherited Destroy;
+end;
+
+function TiTreeViewModel.GetEnumerator: TiTreeViewModelEnumerator;
+begin
+  Result := TiTreeViewModelEnumerator.Create(FHeadElement^);
+end;
+
+function TiTreeViewModel.Empty: Boolean;
+begin
+  Result := FHeadElement = nil;
+end;
+
+function TiTreeViewModel.AddElement(ATreeItem: TTreeItem): PTreeViewItem;
+var
+  NewElement : PTreeViewItem;
+begin
+  if Empty then
+  begin
+    New(FHeadElement{%H-});
+    FHeadElement^ := TTreeViewItem.Create(ATreeItem);
+    FLastElement := FHeadElement;
+    Result := FHeadElement;
+    Exit;
+  end;
+
+  New(NewElement{%H-});
+  NewElement^ := TTreeViewItem.Create(ATreeItem);
+  NewElement^.FPrevElement := FLastElement;
+  FLastElement^.FNextElement := NewElement;
+  FLastElement := NewElement;
+end;
+
+{ TiTreeViewItem }
+
+function TiTreeViewItem.HasChildrens: Boolean;
+begin
+  Result := FChildrenElement <> nil;
+end;
+
+function TiTreeViewItem.ChildrenElement: PTreeViewItem;
+begin
+  Result := FChildrenElement;
+end;
+
+function TiTreeViewItem.AddChildren(AItemData: TItemData): PTreeViewItem;
+begin
+  if not HasChildrens then
+  begin
+    New(FChildrenElement{%H-});
+    FChildrenElement^ := TTreeViewItem.Create(AItemData);
+    FLastChildrenElement := FChildrenElement;
+    Result := FChildrenElement;
+    Exit;
+  end;
+
+  New(FLastChildrenElement^.FNextElement{%H-});
+  FLastChildrenElement^.FNextElement^ := TTreeViewItem.Create(AItemData);
+  FLastChildrenElement^.FNextElement^.FPrevElement := FLastChildrenElement;
+  FLastChildrenElement := FLastChildrenElement^.FNextElement;
+end;
+
+function TiTreeViewItem.PrevElement: PTreeViewItem;
+begin
+  Result := FPrevElement;
+end;
+
+function TiTreeViewItem.NextElement: PTreeViewItem;
+begin
+  Result := FNextElement;
+end;
+
+function TiTreeViewItem.GetValue: TItemData;
+begin
+  Result := FItemData;
+end;
+
+procedure TiTreeViewItem.SetValue(AItemData: TItemData);
+begin
+  FItemData := AItemData;
+end;
+
+constructor TiTreeViewItem.Create(AItemData: TItemData);
+begin
+  FItemData := AItemData;
+  FPrevElement := nil;
+  FNextElement := nil;
+  FChildrenElement := nil;
+  FLastChildrenElement := nil;
+end;
+
+destructor TiTreeViewItem.Destroy;
+var
+  Elem, Prev : PTreeViewItem;
+begin
+  Elem := FLastChildrenElement;
+  while (Elem <> nil) do
+  begin
+    Prev := Elem^.FPrevElement;
+    FreeAndNil(Elem);
+    Elem := Prev;
+  end;
+
+  inherited Destroy;
+end;
+
 end.
 
