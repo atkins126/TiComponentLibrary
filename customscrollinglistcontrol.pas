@@ -34,17 +34,16 @@ unit CustomScrollingListControl;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, container.list;
 
 type
-  { Interface for list components model }
-  generic IScrollingListModel<Item> = interface
+  
+  generic TCommonScrollingListModel<T, BinaryCompareFunctor> = class
+    (specialize TList<T, BinaryCompareFunctor>);
 
-  end;
-
-  { Interface for list components renderer }
-  generic IScrollingListRenderer<Item> = interface
-
+  generic TCommonScrollingListRenderer<T> = class
+  public
+    procedure Draw (AItemIndex : Integer); virtual; abstract;
   end;
 
   { Base class for scrolling list controls components }
